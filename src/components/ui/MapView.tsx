@@ -10,26 +10,30 @@ import {
 } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
-// Utility function for temperature-based color
+//  Import type if needed
+// Adjust the import path if you have defined WeatherData in a types file
+// import { WeatherData } from '@/types'
+
 const getColor = (temp: number) =>
   temp < 10 ? 'red' : temp < 25 ? 'blue' : 'green'
 
 interface MapViewProps {
   range: number[] // Slider range [start, end]
   unit: 'Day' | 'Week' | 'Month'
+  //  Add this only if you're planning to pass it from parent
+  // weatherData: WeatherData | null
 }
 
 export default function MapView({ range, unit }: MapViewProps) {
   const [polygons, setPolygons] = useState<any[]>([])
   const [weatherData, setWeatherData] = useState<number[]>([])
+
   const lat = 17.385
   const lon = 78.4867
 
-  // Format date string based on range offset
+  // Utility to get date from today by offset
   const getDateFromToday = (offset: number) => {
-    if (typeof offset !== 'number' || isNaN(offset)) {
-      offset = 0
-    }
+    if (typeof offset !== 'number' || isNaN(offset)) offset = 0
     const d = new Date()
     d.setDate(d.getDate() + offset)
     return d.toISOString().split('T')[0]
@@ -38,19 +42,24 @@ export default function MapView({ range, unit }: MapViewProps) {
   const startDate = getDateFromToday(range?.[0] ?? 0)
   const endDate = getDateFromToday(range?.[1] ?? 0)
 
-  // Fetch temperature data from Open-Meteo API
+  // Fetch weather data using Open-Meteo API
   useEffect(() => {
-    fetch(
-      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&hourly=temperature_2m`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setWeatherData(data.hourly?.temperature_2m ?? [])
-      })
-      .catch(console.error)
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(
+          `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&hourly=temperature_2m`
+        )
+        const data = await res.json()
+        setWeatherData(data?.hourly?.temperature_2m ?? [])
+      } catch (err) {
+        console.error('Weather fetch failed:', err)
+      }
+    }
+
+    fetchWeather()
   }, [startDate, endDate])
 
-  // Draw a triangle polygon on click and calculate its average temp
+  //  Handle polygon drawing and temperature
   function DrawHandler() {
     useMapEvents({
       click() {
@@ -72,6 +81,7 @@ export default function MapView({ range, unit }: MapViewProps) {
         ])
       },
     })
+
     return null
   }
 
