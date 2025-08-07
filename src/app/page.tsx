@@ -155,8 +155,9 @@ export default function Dashboard() {
 
       {/* Interactive Map */}
       <div className="bg-[#1e293b] p-6 rounded-xl">
-        <h2 className="text-xl font-semibold mb-4">🗺️ Geo Analytics</h2>
-        <MapView range={range} unit={unit} weatherData={weatherData} />
+        <h2 className="text-xl font-semibold mb-4"> Geo Analytics</h2>
+        <MapView range={range} unit={unit} />
+
       </div>
 
       {/* Line Chart */}
